@@ -7,6 +7,7 @@ public interface StudSubjectService {
     void ConnectionSQLite();
     void close();
     void addStudent();
+    void selectStudents();
     void addGroup();
     void selectGroup();
     void addSubgroups();

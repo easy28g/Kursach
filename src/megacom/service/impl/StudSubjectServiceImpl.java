@@ -1,11 +1,13 @@
 package megacom.service.impl;
 
 import megacom.models.Groups;
+import megacom.models.Students;
 import megacom.models.Subgroups;
 import megacom.models.Subjects;
 import megacom.service.StudSubjectService;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class StudSubjectServiceImpl implements StudSubjectService {
@@ -14,6 +16,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
     Connection connection;
     Statement statement;
 
+    // Добавляем предмет
     @Override
     public void addSubject() {
 
@@ -21,7 +24,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             System.out.print("Введите название предмета - ");
             String subject = scanner.next();
 
-            Subjects subjects = new Subjects(subject);
+            Subjects subjects = new Subjects(subject); // Экземпляр класса
 
             String query = "INSERT INTO subject(subject_name)" +
                     "VALUES ('" + subjects.getSubject() + "')";
@@ -36,6 +39,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
 
     }
 
+    // Вывод таблицы Предмета
     @Override
     public void selectSubject() {
         try {
@@ -74,17 +78,91 @@ public class StudSubjectServiceImpl implements StudSubjectService {
         }
     }
 
+    // Добавлние студента
     @Override
     public void addStudent() {
         try{
+            System.out.print("Введите имя студента: ");
+            String name = scanner.next();
+            System.out.print("Введите фамилию студента: ");
+            String fam = scanner.next();
+            System.out.print("Введите группу: ");
+            String group = scanner.next();
 
+            int id = id_subgroups(group);
+            int id_sg = id_group(id, group);
 
+            Students students = new Students(name, fam, id_sg);
+
+            String query = "INSERT INTO students(firstname, secondname, id_subgroups)"+
+                    " VALUES('"+students.getFirstname()+"','"+students.getSecondname()+"','"+students.getId_subgroup()+"')";
+
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(query);
 
         }catch (Exception e){
             System.out.println(e.getMessage());
         }
     }
 
+    private int id_group(int id, String group) {
+        try{
+            statement = connection.createStatement();
+            String query = "SELECT subgroup_name FROM subgroups  ";
+
+            ResultSet rs = statement.executeQuery(query);
+
+            ArrayList<String> subgroup_names = new ArrayList<>();
+            int i=0;
+            while(rs.next()){
+                subgroup_names.add(rs.getString("subgroup_name"));
+                //System.out.println(subgroup_names.get(i));
+                i++;
+            }
+
+            Statement statement1 = connection.createStatement();
+            System.out.print("Введите название подгруппы - ");
+            String subg = scanner.next();
+            for(int j=0; j<subgroup_names.size(); j++){
+                if (subgroup_names.get(j).equals(subg)) {
+                    String query2 = "SELECT id FROM subgroups WHERE subgroup_name = '"+subg+"'";
+                    ResultSet rsSG = statement1.executeQuery(query2);
+                    while (rsSG.next()){
+                        int idsg = rsSG.getInt("id");
+                        return idsg;
+                    }
+                }
+            }
+
+            rs.close();
+            statement.close();
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+        throw new RuntimeException("Такой подгруппы нет");
+    }
+
+    @Override
+    public void selectStudents() {
+       try {
+           statement  = connection.createStatement ();
+           String query = "SELECT id, firstname, secondname, id_subgroups FROM students";
+           ResultSet rs = statement.executeQuery(query);
+           while(rs.next()) {
+               int id = rs.getInt("id");
+               String name = rs.getString("firstname");
+               String fam = rs.getString("secondname");
+               int id_sg = rs.getInt("id_subgroups");
+               System.out.println(id+ "\t|"+ name+ "\t|"+fam+ "\t|"+id_sg);
+           }
+           rs.close();
+           statement.close();
+       }catch (Exception e){
+           System.out.println(e.getMessage());
+       }
+    }
+
+    // Добавляем Группу
     @Override
     public void addGroup() {
         try{
@@ -104,8 +182,10 @@ public class StudSubjectServiceImpl implements StudSubjectService {
         }
     }
 
+    // Вывод таблицы Групп
     @Override
     public void selectGroup() {
+        //System.out.println("Таблица Групп:");
         try{
             statement  = connection.createStatement ();
             String query = "SELECT id, group_name FROM groups";
@@ -123,6 +203,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
         }
     }
 
+    // Добавляем Подгруппу
     @Override
     public void addSubgroups() {
         try{
@@ -133,7 +214,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
 
             int id = id_subgroups(groupname);
 
-            Subgroups subgroups = new Subgroups(subgroup, id);
+            Subgroups subgroups = new Subgroups(subgroup, id_subgroups(groupname));
 
             String query = "INSERT INTO subgroups(subgroup_name, id_group) "+
                     "VALUES ('"+subgroups.getSubgroupName()+"', '" + id_subgroups(groupname) + "')";
@@ -146,8 +227,10 @@ public class StudSubjectServiceImpl implements StudSubjectService {
         }
     }
 
+    // Вывд Подгруппы
     @Override
     public void selectSubgroups() {
+        //System.out.println("Таблица подгрупп: ");
         try{
             statement  = connection.createStatement ();
             String query = "SELECT id, subgroup_name, id_group FROM subgroups";
@@ -165,6 +248,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
         }
     }
 
+    // Функция получения ID из таблицы Групп
     private int id_subgroups(String groupname) {
         int id = 0;
         try{
@@ -187,7 +271,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             System.out.println(e.getMessage());
 
         }
-        return id;
+        throw new RuntimeException("Нет группы с таким названием!");
     }
 
     private Connection getConnection() {
