@@ -90,7 +90,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             String group = scanner.next();
 
             int id = id_subgroups(group);
-            int id_sg = id_group(id, group);
+            int id_sg = id_group(id);
 
             Students students = new Students(name, fam, id_sg);
 
@@ -105,7 +105,8 @@ public class StudSubjectServiceImpl implements StudSubjectService {
         }
     }
 
-    private int id_group(int id, String group) {
+    // Функция получения ID из таблицы subgroup
+    private int id_group(int id) {
         try{
             statement = connection.createStatement();
             String query = "SELECT subgroup_name FROM subgroups  ";
@@ -125,7 +126,8 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             String subg = scanner.next();
             for(int j=0; j<subgroup_names.size(); j++){
                 if (subgroup_names.get(j).equals(subg)) {
-                    String query2 = "SELECT id FROM subgroups WHERE subgroup_name = '"+subg+"'";
+                    String query2 = "SELECT id FROM subgroups WHERE subgroup_name = '"+subg+"' AND" +
+                            " id_group = '"+id+"'";
                     ResultSet rsSG = statement1.executeQuery(query2);
                     while (rsSG.next()){
                         int idsg = rsSG.getInt("id");
