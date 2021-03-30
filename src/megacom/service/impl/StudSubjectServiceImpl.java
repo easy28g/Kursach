@@ -8,6 +8,7 @@ import megacom.service.StudSubjectService;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Scanner;
 
 public class StudSubjectServiceImpl implements StudSubjectService {
@@ -281,13 +282,115 @@ public class StudSubjectServiceImpl implements StudSubjectService {
     }
 
     @Override
-    public void select_group_student_subject() {
-        try{
+    public void addAttendance() {
+        System.out.print("Введите предмет - ");
+        String subj = scanner.next();
+        System.out.print("Введите группу - ");
+        String group = scanner.next();
+        System.out.print("Введите фамилию студента - ");
+        String fam = scanner.next();
+        System.out.print("Введите имя студента - ");
+        String imya = scanner.next();
+
+        try {
+
             statement = connection.createStatement();
+            int id_subj = getIdSubject(subj);
+            int id_group = getIdGroup(group);
+            int id_fio = getIdStudent(imya, fam);
+
+            int id_gss = getIdGSS(id_subj, id_group, id_fio);
+            String yn;
+            do {
+                System.out.println("Отметить Успеваемость/Посещаемость?  -  (y/n) ");
+                yn = scanner.next();
+                if(yn.equals("n")){
+                    break;
+                }
+                addMarkAndCheckedStud(id_gss);
+            }while(true);
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            throw new RuntimeException("Запос addAttendace не выполнен");
+        }
+
+    }
+
+    private void addMarkAndCheckedStud(int id_gss) {
+        int check;
+        //do {
+            System.out.print("Посещаемость 1-был(а) | 0-не был(а) ==> ");
+            check = scanner.nextInt();
+        //}while (check>=0 || check<=1);
+
+        System.out.print("Поставить оценку? 1-да | 0-нет ==> ");
+        int yn = scanner.nextInt();
+        int mark=0;
+        if(yn==1){
+            //do{
+                System.out.print("Оценка (1-5) ==> ");
+                mark = scanner.nextInt();
+            //}while(mark>=1 || mark<=5);
+        }
+
+        System.out.println("Дата занятия");
+        int month;
+        //do{
+            System.out.print("Месяц: ");
+            month = scanner.nextInt();
+        //}while(month>=1 || month<=12);
+
+        // Надо доработать количество дней
+        int day;
+        //do{
+            System.out.print("День: ");
+            day = scanner.nextInt();
+        //}while(day>=1 || day<=31);
+
+        // Сделать с календарем
+        //Calendar calendar = Calendar.getInstance();
+        int year;
+        //do{
+            System.out.print("Год: ");
+            year = scanner.nextInt();
+        //}while (year>2000);
+
+        String dd = String.valueOf(day+"."+month+"."+year);
+
+        try{
+
+            String query = "INSERT INTO attendance(check_stud, mark, lesson_date, id_group_student_subject) "+
+                    "VALUES ('"+check+"', '"+mark+"', '"+dd+"', '"+id_gss+"')";
+
+            statement = connection.createStatement();
+            statement.executeUpdate(query);
 
         }catch (Exception e){
             System.out.println(e.getMessage());
         }
+
+    }
+
+    // Функция получения ID из таблицы GSS
+    // для метода addAttendance()
+    private int getIdGSS(int id_subj, int id_group, int id_fio) {
+        try{
+            statement  = connection.createStatement ();
+
+            String query = "SELECT id FROM group_student_subject " +
+                    " WHERE id_student = '"+id_fio+"' AND " +
+                    " id_subject = '"+id_subj+"' AND " +
+                    " id_group = '"+id_group+"' ";
+            ResultSet rs = statement.executeQuery(query);
+
+            int id = rs.getInt("id");
+            return id;
+            //connection.close();
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+        throw new RuntimeException("Запрос addAttendance в функции getIdGSS");
     }
 
     // Функция получение ID из таблицы СТУДЕНТЫ
@@ -303,8 +406,8 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             return id;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
-            throw new RuntimeException("Такого группы нет");
         }
+        throw new RuntimeException("Такого студента нет");
     }
 
     // Функция получение ID из таблицы ГРУППЫ
@@ -319,8 +422,8 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             return id;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
-            throw new RuntimeException("Такого группы нет");
         }
+        throw new RuntimeException("Такой группы нет");
     }
 
     // Функция получение ID из таблицы ПРЕДМЕТА
@@ -335,8 +438,8 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             return id;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
-            throw new RuntimeException("Такого предмета нет");
         }
+        throw new RuntimeException("Такого предмета нет");
     }
 
     // Функция получения ID из таблицы Групп

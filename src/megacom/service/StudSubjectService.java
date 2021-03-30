@@ -18,6 +18,7 @@ public interface StudSubjectService {
     void selectSubgroups();
 
     void fill_group_student_subject();
-    void select_group_student_subject();
+
+    void addAttendance();
 
 }

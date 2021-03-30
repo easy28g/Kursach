@@ -24,6 +24,9 @@ public class Main {
         studSubjectService.selectStudents();
         System.out.println("-----------------Заполнение таблицы group_student_subject-----------------");
         studSubjectService.fill_group_student_subject();
+        System.out.println("-----------------Проставить академ.успевамость-----------------");
+        studSubjectService.addAttendance();
+
 
         studSubjectService.close(); // close connetion DB
     }
