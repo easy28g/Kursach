@@ -250,6 +250,95 @@ public class StudSubjectServiceImpl implements StudSubjectService {
         }
     }
 
+
+    // Заполнение тадлицы group_student_subject
+    @Override
+    public void fill_group_student_subject() {
+        System.out.print("Введите предмет - ");
+        String subj = scanner.next();
+        System.out.print("Введите группу - ");
+        String group = scanner.next();
+        System.out.print("Введите фамилию студента - ");
+        String fam = scanner.next();
+        System.out.print("Введите имя студента - ");
+        String imya = scanner.next();
+
+        try{
+            statement = connection.createStatement();
+            int id_subj = getIdSubject(subj);
+            int id_group = getIdGroup(group);
+            int id_fio = getIdStudent(imya, fam);
+
+            String query = "INSERT INTO group_student_subject(id_student, id_subject, id_group) " +
+                    " VALUES('"+id_fio+"', '"+id_subj+"', '"+id_group+"')";
+
+            statement = connection.createStatement();
+            statement.executeUpdate(query);
+
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @Override
+    public void select_group_student_subject() {
+        try{
+            statement = connection.createStatement();
+
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+    // Функция получение ID из таблицы СТУДЕНТЫ
+    // для таблцы group_student_subject
+    // для метода fill_groups_student_subject
+    private int getIdStudent(String imya, String fam) {
+        try {
+            statement = connection.createStatement();
+            String query = "SELECT id FROM students WHERE firstname = '"+fam+"' " +
+                    " AND secondname = '"+imya+"'";
+            ResultSet rs = statement.executeQuery(query);
+            int id = rs.getInt("id");
+            return id;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            throw new RuntimeException("Такого группы нет");
+        }
+    }
+
+    // Функция получение ID из таблицы ГРУППЫ
+    // для таблцы group_student_subject
+    // для метода fill_groups_student_subject
+    private int getIdGroup(String group) {
+        try {
+            statement = connection.createStatement();
+            String query = "SELECT id FROM groups WHERE group_name = '"+group+"'";
+            ResultSet rs = statement.executeQuery(query);
+            int id = rs.getInt("id");
+            return id;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            throw new RuntimeException("Такого группы нет");
+        }
+    }
+
+    // Функция получение ID из таблицы ПРЕДМЕТА
+    // для таблцы group_student_subject
+    // для метода fill_groups_student_subject
+    private int getIdSubject(String subj) {
+        try {
+            statement = connection.createStatement();
+            String query = "SELECT id FROM subject WHERE subject_name = '"+subj+"'";
+            ResultSet rs = statement.executeQuery(query);
+            int id = rs.getInt("id");
+            return id;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            throw new RuntimeException("Такого предмета нет");
+        }
+    }
+
     // Функция получения ID из таблицы Групп
     private int id_subgroups(String groupname) {
         int id = 0;
