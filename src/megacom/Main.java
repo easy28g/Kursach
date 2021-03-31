@@ -21,10 +21,12 @@ public class Main {
                 "5. Регистрация студента на предмет \n" +
                 "6. Проставить академ.успеваемость \n" +
                 "7. Выход из меню (Любая кнопка)");
-        System.out.print("Выберите кнопку: ");
-        int n = scanner.nextInt();
+
 
         do{
+            System.out.print("Выберите кнопку: ");
+            int n = scanner.nextInt();
+
             if (n == 1) {
                 System.out.println("-----------------Добавление нового предмета-----------------");
                 studSubjectService.addSubject(); // add subject to DB
@@ -47,8 +49,10 @@ public class Main {
             } else if(n == 6){
                 System.out.println("-----------------Проставить академ.успевамость-----------------");
                 studSubjectService.addAttendance();
+            } else {
+                break;
             }
-        }while(n>=1 && n<=6);
+        }while(true);
 
 
         studSubjectService.close(); // close connetion DB
