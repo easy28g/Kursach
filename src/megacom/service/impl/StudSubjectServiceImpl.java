@@ -83,11 +83,24 @@ public class StudSubjectServiceImpl implements StudSubjectService {
     @Override
     public void addStudent() {
         try{
+            statement = connection.createStatement();
+
             System.out.print("Введите имя студента: ");
             String name = scanner.next();
             System.out.print("Введите фамилию студента: ");
             String fam = scanner.next();
-            System.out.print("Введите группу: ");
+
+            // Вывод названий групп для удобства выбора пользователя
+            String query1 = "SELECT id, group_name FROM groups";
+            ResultSet rs1 = statement.executeQuery(query1);
+            while(rs1.next()) {
+                int id1 = rs1.getInt("id");
+                String name1 = rs1.getString("group_name");
+                System.out.println(id1+ "\t|"+ name1);
+            }
+            rs1.close();
+
+            System.out.print("Выберите группу: ");
             String group = scanner.next();
 
             int id = id_subgroups(group);
@@ -98,8 +111,8 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             String query = "INSERT INTO students(firstname, secondname, id_subgroups)"+
                     " VALUES('"+students.getFirstname()+"','"+students.getSecondname()+"','"+students.getId_subgroup()+"')";
 
-            Statement statement = connection.createStatement();
             statement.executeUpdate(query);
+            statement.close();
 
         }catch (Exception e){
             System.out.println(e.getMessage());
@@ -110,7 +123,8 @@ public class StudSubjectServiceImpl implements StudSubjectService {
     private int id_group(int id) {
         try{
             statement = connection.createStatement();
-            String query = "SELECT subgroup_name FROM subgroups  ";
+            String query = "select subgroups.subgroup_name from subgroups " +
+                    "inner join groups on groups.id = subgroups.id_group where groups.group_name = '"++"' ";
 
             ResultSet rs = statement.executeQuery(query);
 
@@ -118,7 +132,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             int i=0;
             while(rs.next()){
                 subgroup_names.add(rs.getString("subgroup_name"));
-                //System.out.println(subgroup_names.get(i));
+                System.out.println(subgroup_names.get(i));
                 i++;
             }
 
@@ -318,6 +332,9 @@ public class StudSubjectServiceImpl implements StudSubjectService {
     }
 
     private void addMarkAndCheckedStud(int id_gss) {
+        System.out.print("Введите тип занаятия - ");
+        String lessonType = scanner.next();
+
         int check;
         //do {
             System.out.print("Посещаемость 1-был(а) | 0-не был(а) ==> ");
@@ -360,8 +377,8 @@ public class StudSubjectServiceImpl implements StudSubjectService {
 
         try{
 
-            String query = "INSERT INTO attendance(check_stud, mark, lesson_date, id_group_student_subject) "+
-                    "VALUES ('"+check+"', '"+mark+"', '"+dd+"', '"+id_gss+"')";
+            String query = "INSERT INTO attendance(check_stud, mark, lesson_date, id_group_student_subject, lesson_type) "+
+                    "VALUES ('"+check+"', '"+mark+"', '"+dd+"', '"+id_gss+"', '"+lessonType+"')";
 
             statement = connection.createStatement();
             statement.executeUpdate(query);
