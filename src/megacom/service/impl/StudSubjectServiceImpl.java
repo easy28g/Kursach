@@ -21,9 +21,13 @@ public class StudSubjectServiceImpl implements StudSubjectService {
     @Override
     public void addSubject() {
 
+        String subject = null;
         try {
+            System.out.println("Существующие предметы в базе");
+            selectSubject();
+
             System.out.print("Введите название предмета - ");
-            String subject = scanner.next();
+            subject = scanner.next();
 
             Subjects subjects = new Subjects(subject); // Экземпляр класса
 
@@ -35,7 +39,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
 
 
         }catch (Exception e){
-            System.out.print(e.getMessage());
+            System.out.print("Предмет "+subject+" уже существует в базе");
         }
 
     }
@@ -82,43 +86,54 @@ public class StudSubjectServiceImpl implements StudSubjectService {
     // Добавлние студента
     @Override
     public void addStudent() {
+        int n = 1;
         do {
-            System.out.println("");
-            try {
-                statement = connection.createStatement();
+            if(n==1) {
+                try {
+                    statement = connection.createStatement();
 
-                System.out.print("Введите имя студента: ");
-                String name = scanner.next();
-                System.out.print("Введите фамилию студента: ");
-                String fam = scanner.next();
+                    System.out.print("Введите имя студента: ");
+                    String name = scanner.next();
+                    System.out.print("Введите фамилию студента: ");
+                    String fam = scanner.next();
 
-                // Вывод названий групп для удобства выбора пользователя
-                String query1 = "SELECT id, group_name FROM groups";
-                ResultSet rs1 = statement.executeQuery(query1);
-                while (rs1.next()) {
-                    int id1 = rs1.getInt("id");
-                    String name1 = rs1.getString("group_name");
-                    System.out.println(id1 + "\t|" + name1);
+                    // Вывод названий групп для удобства выбора пользователя
+                    String query1 = "SELECT id, group_name FROM groups";
+                    ResultSet rs1 = statement.executeQuery(query1);
+                    while (rs1.next()) {
+                        int id1 = rs1.getInt("id");
+                        String name1 = rs1.getString("group_name");
+                        System.out.println(id1 + "\t|" + name1);
+                    }
+                    //rs1.close();
+
+                    System.out.print("Выберите группу: ");
+                    String group = scanner.next();
+
+                    int id = id_subgroups(group);
+                    int id_sg = id_group(id, group);
+
+                    Students students = new Students(name, fam, id_sg);
+
+                    String query = "INSERT INTO students(firstname, secondname, id_subgroups)" +
+                            " VALUES('" + students.getFirstname() + "','" + students.getSecondname() + "','" + students.getId_subgroup() + "')";
+
+                    statement.executeUpdate(query);
+                    statement.close();
+
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
                 }
-                //rs1.close();
 
-                System.out.print("Выберите группу: ");
-                String group = scanner.next();
+                System.out.println("1. Добавть еще одного студента \n" +
+                                   "2. Выход из Добавления студента (Любая кнопка)");
+                System.out.print("Выберите команду: ");
+                n = scanner.nextInt();
 
-                int id = id_subgroups(group);
-                int id_sg = id_group(id, group);
-
-                Students students = new Students(name, fam, id_sg);
-
-                String query = "INSERT INTO students(firstname, secondname, id_subgroups)" +
-                        " VALUES('" + students.getFirstname() + "','" + students.getSecondname() + "','" + students.getId_subgroup() + "')";
-
-                statement.executeUpdate(query);
-                statement.close();
-
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
+            } else {
+                break;
             }
+
         }while (true);
     }
 
@@ -165,23 +180,27 @@ public class StudSubjectServiceImpl implements StudSubjectService {
 
     @Override
     public void selectStudents() {
-       try {
-           statement  = connection.createStatement ();
-           String query = "SELECT id, firstname, secondname, id_subgroups FROM students";
-           ResultSet rs = statement.executeQuery(query);
-           while(rs.next()) {
-               int id = rs.getInt("id");
-               String name = rs.getString("firstname");
-               String fam = rs.getString("secondname");
-               int id_sg = rs.getInt("id_subgroups");
-               System.out.println(id+ "\t|"+ name+ "\t|"+fam+ "\t|"+id_sg);
-           }
-           rs.close();
-           statement.close();
-       }catch (Exception e){
-           System.out.println(e.getMessage());
-       }
+       selectStudentsFunction();
     }
+    private void selectStudentsFunction() {
+        try {
+            statement  = connection.createStatement ();
+            String query = "SELECT id, firstname, secondname, id_subgroups FROM students";
+            ResultSet rs = statement.executeQuery(query);
+            while(rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("firstname");
+                String fam = rs.getString("secondname");
+                int id_sg = rs.getInt("id_subgroups");
+                System.out.println(id+ "\t|"+ name+ "\t|"+fam+ "\t|"+id_sg);
+            }
+            rs.close();
+            statement.close();
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
 
     // Добавляем Группу
     @Override
@@ -269,34 +288,83 @@ public class StudSubjectServiceImpl implements StudSubjectService {
         }
     }
 
+    private void selectStudentsFunctionFromGroup(String group) {
+        try {
+            statement  = connection.createStatement ();
+            String query = "SELECT students.id, firstname, secondname FROM students " +
+                    " INNER JOIN subgroups ON subgroups.id = students.id_subgroups " +
+                    " INNER JOIN groups ON groups.id = subgroups.id_group WHERE groups.group_name = '"+group+"'";
+            ResultSet rs = statement.executeQuery(query);
+            while(rs.next()) {
+                int id_ssffg = rs.getInt("id");
+                String name = rs.getString("firstname");
+                String fam = rs.getString("secondname");
+                System.out.println(id_ssffg+ "\t|"+ name+ "\t|"+fam);
+            }
+            rs.close();
+            statement.close();
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
 
     // Заполнение тадлицы group_student_subject
     @Override
     public void fill_group_student_subject() {
-        System.out.print("Введите предмет - ");
-        String subj = scanner.next();
-        System.out.print("Введите группу - ");
-        String group = scanner.next();
-        System.out.print("Введите фамилию студента - ");
-        String fam = scanner.next();
-        System.out.print("Введите имя студента - ");
-        String imya = scanner.next();
 
-        try{
-            statement = connection.createStatement();
-            int id_subj = getIdSubject(subj);
-            int id_group = getIdGroup(group);
-            int id_fio = getIdStudent(imya, fam);
+        int n = 1;
+        do {
+            if(n==1) {
+                selectSubject();
+                System.out.print("Введите предмет - ");
+                String subj = scanner.next();
 
-            String query = "INSERT INTO group_student_subject(id_student, id_subject, id_group) " +
-                    " VALUES('"+id_fio+"', '"+id_subj+"', '"+id_group+"')";
+                selectGroup();
+                System.out.print("Введите группу - ");
+                String group = scanner.next();
 
-            statement = connection.createStatement();
-            statement.executeUpdate(query);
+                selectStudentsFunctionFromGroup(group);
+                
+                System.out.print("Введите имя студента - ");
+                String fam = scanner.next();
+                System.out.print("Введите фамилию студента - ");
+                String imya = scanner.next();
+                
+                selectNameStudentsFunctionFromSubject();
 
-        }catch (Exception e){
-            System.out.println(e.getMessage());
-        }
+                catchEqualStudentId(fam, imya);
+
+                try {
+                    statement = connection.createStatement();
+                    int id_subj = getIdSubject(subj);
+                    int id_group = getIdGroup(group);
+                    int id_fio = getIdStudent(imya, fam);
+
+                    String query = "INSERT INTO group_student_subject(id_student, id_subject, id_group) " +
+                            " VALUES('" + id_fio + "', '" + id_subj + "', '" + id_group + "')";
+
+                    statement = connection.createStatement();
+                    statement.executeUpdate(query);
+
+                } catch (Exception r) {
+                    System.out.println(fam+" "+ imya+" уже зарегистрирован на данный предмет!!!");
+                }
+
+                System.out.println("1. Зарегистрировать еще одного студента на предмет \n" +
+                                   "2. Выход из Регистрации студента (Любая кнопка)");
+                System.out.print("Выберите команду: ");
+                n = scanner.nextInt();
+
+            } else {
+                break;
+            }
+
+        }while (true);
+
+    }
+
+
+    private void selectNameStudentsFunctionFromSubject() {
     }
 
     @Override

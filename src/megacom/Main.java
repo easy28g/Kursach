@@ -14,16 +14,16 @@ public class Main {
         StudSubjectService studSubjectService = new StudSubjectServiceImpl();
         studSubjectService.ConnectionSQLite(); // connection to DB
 
-        System.out.println("1. Добавить предмет \n" +
-                "2. Создать новую группу \n" +
-                "3. Создать подгруппу для группы \n" +
-                "4. Добавть студента к группе \n" +
-                "5. Регистрация студента на предмет \n" +
-                "6. Проставить академ.успеваемость \n" +
-                "7. Выход из меню (Любая кнопка)");
-
-
         do{
+            System.out.println("*************************************************");
+            System.out.println("1. Добавить предмет \n" +
+                    "2. Создать новую группу \n" +
+                    "3. Создать подгруппу для группы \n" +
+                    "4. Добавть студента к группе \n" +
+                    "5. Регистрация студента на предмет \n" +
+                    "6. Проставить академ.успеваемость \n" +
+                    "7. Выход из меню (Любая кнопка)");
+
             System.out.print("Выберите кнопку: ");
             int n = scanner.nextInt();
 
@@ -42,7 +42,7 @@ public class Main {
             } else if(n == 4){
                 System.out.println("-----------------Добавление студента к группе-----------------");
                 studSubjectService.addStudent();
-                studSubjectService.selectStudents();
+                //studSubjectService.selectStudents();
             } else if(n == 5){
                 System.out.println("-----------------Регистрация студента на предмет-----------------");
                 studSubjectService.fill_group_student_subject();
