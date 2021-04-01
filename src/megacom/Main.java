@@ -22,7 +22,8 @@ public class Main {
                     "4. Добавть студента к группе \n" +
                     "5. Регистрация студента на предмет \n" +
                     "6. Проставить академ.успеваемость \n" +
-                    "7. Выход из меню (Любая кнопка)");
+                    "7. Просмотреть академ.успевамость \n" +
+                    "8. Выход из меню (Любая кнопка)");
 
             System.out.print("Выберите кнопку: ");
             int n = scanner.nextInt();
@@ -38,7 +39,7 @@ public class Main {
             } else if(n == 3){
                 System.out.println("-----------------Создание подрупп для группы-----------------");
                 studSubjectService.addSubgroups();
-                studSubjectService.selectSubgroups();
+                //studSubjectService.selectSubgroups();
             } else if(n == 4){
                 System.out.println("-----------------Добавление студента к группе-----------------");
                 studSubjectService.addStudent();
@@ -49,7 +50,10 @@ public class Main {
             } else if(n == 6){
                 System.out.println("-----------------Проставить академ.успевамость-----------------");
                 studSubjectService.addAttendance();
-            } else {
+            } else if(n == 7){
+                System.out.println("-----------------Просмотреть академ.успевамость-----------------");
+                studSubjectService.totalAcademicAttendance();
+            }else {
                 break;
             }
         }while(true);

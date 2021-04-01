@@ -205,9 +205,12 @@ public class StudSubjectServiceImpl implements StudSubjectService {
     // Добавляем Группу
     @Override
     public void addGroup() {
+        String group = null;
         try{
+            System.out.println("Доступные группы в базе");
+            selectGroup();
             System.out.print("Введите название группы - ");
-            String group = scanner.next();
+            group = scanner.next();
 
             Groups groups = new Groups(group);
 
@@ -218,7 +221,7 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             statement.executeUpdate(query);
 
         }catch (Exception e){
-            System.out.println(e);
+            System.out.println(group + " уже существует");
         }
     }
 
@@ -247,10 +250,35 @@ public class StudSubjectServiceImpl implements StudSubjectService {
     @Override
     public void addSubgroups() {
         try{
+            System.out.println("Доступные группы в базе");
+            selectGroup();
+
             System.out.print("Введите название группы - ");
             String groupname = scanner.next();
+
+            // Вывод названий подгрупп для удобства выбора
+            String query3 = "SELECT subgroups.id, subgroup_name FROM subgroups " +
+                    "   INNER JOIN groups ON groups.id = subgroups.id_group WHERE groups.group_name = '"+groupname+"'";
+            ResultSet rs3 = statement.executeQuery(query3);
+            ArrayList<String> subgroups_name = new ArrayList<>();
+            int i=0;
+            while (rs3.next()) {
+                int id3 = rs3.getInt("id");
+                String name3 = rs3.getString("subgroup_name");
+                subgroups_name.add(name3);
+                //System.out.println(subgroups_name.get(i));
+                System.out.println(id3 + "\t|" + name3);
+                i++;
+            }
+
             System.out.print("Введите название подгруппы - ");
             String subgroup = scanner.next();
+
+            for(String item: subgroups_name){
+                if(item.equals(subgroup)){
+                    throw new RuntimeException("Подгруппа "+subgroup+" уже существует в группе "+ groupname);
+                }
+            }
 
             int id = id_subgroups(groupname);
 
@@ -332,22 +360,24 @@ public class StudSubjectServiceImpl implements StudSubjectService {
                 
                 selectNameStudentsFunctionFromSubject();
 
-                catchEqualStudentId(fam, imya);
 
+                int idstud = getIdStudent(imya, fam);
                 try {
-                    statement = connection.createStatement();
-                    int id_subj = getIdSubject(subj);
-                    int id_group = getIdGroup(group);
-                    int id_fio = getIdStudent(imya, fam);
+                    if(catchEqualStudentId(idstud)) {
 
-                    String query = "INSERT INTO group_student_subject(id_student, id_subject, id_group) " +
-                            " VALUES('" + id_fio + "', '" + id_subj + "', '" + id_group + "')";
+                        statement = connection.createStatement();
+                        int id_subj = getIdSubject(subj);
+                        int id_group = getIdGroup(group);
+                        int id_fio = getIdStudent(imya, fam);
 
-                    statement = connection.createStatement();
-                    statement.executeUpdate(query);
+                        String query = "INSERT INTO group_student_subject(id_student, id_subject, id_group) " +
+                                " VALUES('" + id_fio + "', '" + id_subj + "', '" + id_group + "')";
 
+                        statement = connection.createStatement();
+                        statement.executeUpdate(query);
+                    }
                 } catch (Exception r) {
-                    System.out.println(fam+" "+ imya+" уже зарегистрирован на данный предмет!!!");
+                        System.out.println(fam + " " + imya + " уже зарегистрирован на данный предмет!!!");
                 }
 
                 System.out.println("1. Зарегистрировать еще одного студента на предмет \n" +
@@ -363,19 +393,50 @@ public class StudSubjectServiceImpl implements StudSubjectService {
 
     }
 
+    private boolean catchEqualStudentId(int idget) {
+        ArrayList<Integer> idStudents = new ArrayList<>();
+        int id=0;
+        try{
+            statement = connection.createStatement();
+            String query = "SELECT id_student FROM group_student_subject";
+            ResultSet rs = statement.executeQuery(query);
+            while (rs.next()){
+                id = rs.getInt("id_student");
+                idStudents.add(id);
+            }
+            for(Integer item: idStudents){
+                if(item == idget){
+                    return true;
+                }
+            }
+            statement.close();
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
 
     private void selectNameStudentsFunctionFromSubject() {
     }
 
     @Override
     public void addAttendance() {
+        System.out.println("Доступные предметы");
+        selectSubject();
         System.out.print("Введите предмет - ");
         String subj = scanner.next();
+
+        System.out.println("Доступные группы");
+        selectGroup();
+
         System.out.print("Введите группу - ");
         String group = scanner.next();
-        System.out.print("Введите фамилию студента - ");
-        String fam = scanner.next();
+        selectStudentsFunctionFromGroup(group);
+
         System.out.print("Введите имя студента - ");
+        String fam = scanner.next();
+        System.out.print("Введите фамилию студента - ");
         String imya = scanner.next();
 
         try {
@@ -400,6 +461,35 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             throwables.printStackTrace();
             throw new RuntimeException("Запос addAttendace не выполнен");
         }
+
+    }
+
+    @Override
+    public void totalAcademicAttendance() {
+
+        System.out.println("Доступные предметы: ");
+        selectSubject();
+
+        System.out.print("Введите название предмета: ");
+        String subjName = scanner.next();
+
+        System.out.println("Доступные группы: ");
+        selectGroup();
+
+        System.out.print("Введите группу: ");
+        String groupName = scanner.next();
+        //selectRegStudentInGroup(groupName);
+        selectStudentsFunctionFromGroup(groupName);
+
+        System.out.print("Введите имя студента: ");
+        String name = scanner.next();
+
+        System.out.print("Введите фамилию студента: ");
+        String fam = scanner.next();
+
+        // SELECT avg (mark) FROM attendance WHERE id_group_student_subject = 3
+
+
 
     }
 
