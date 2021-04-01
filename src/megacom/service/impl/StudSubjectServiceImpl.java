@@ -466,30 +466,138 @@ public class StudSubjectServiceImpl implements StudSubjectService {
 
     @Override
     public void totalAcademicAttendance() {
+        int n=1;
+        do {
+            System.out.println("Доступные предметы: ");
+            selectSubject();
 
-        System.out.println("Доступные предметы: ");
-        selectSubject();
+            System.out.print("Введите название предмета: ");
+            String subjName = scanner.next();
 
-        System.out.print("Введите название предмета: ");
-        String subjName = scanner.next();
+            System.out.println("Доступные группы: ");
+            selectGroup();
 
-        System.out.println("Доступные группы: ");
-        selectGroup();
+            System.out.print("Введите группу: ");
+            String groupName = scanner.next();
+            //selectRegStudentInGroup(groupName);
 
-        System.out.print("Введите группу: ");
-        String groupName = scanner.next();
-        //selectRegStudentInGroup(groupName);
-        selectStudentsFunctionFromGroup(groupName);
+            selectStudentsFunctionFromGroup(groupName);
 
-        System.out.print("Введите имя студента: ");
-        String name = scanner.next();
+            System.out.print("Введите имя студента: ");
+            String name = scanner.next();
 
-        System.out.print("Введите фамилию студента: ");
-        String fam = scanner.next();
+            System.out.print("Введите фамилию студента: ");
+            String fam = scanner.next();
 
-        // SELECT avg (mark) FROM attendance WHERE id_group_student_subject = 3
+            int id_subj = 0;
+            try {
+                statement = connection.createStatement();
+                String query = "SELECT subject.id FROM subject WHERE subject_name = '" + subjName + "'";
+                ResultSet rs = statement.executeQuery(query);
+                while (rs.next()) {
+                    id_subj = rs.getInt("id");
+                }
+                rs.close();
+                statement.close();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
 
+            int id_group = 0;
+            try {
+                statement = connection.createStatement();
+                String query = "SELECT groups.id FROM groups WHERE group_name = '" + groupName + "'";
+                ResultSet rs = statement.executeQuery(query);
+                while (rs.next()) {
+                    id_group = rs.getInt("id");
+                }
+                rs.close();
+                statement.close();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
 
+            int id_student = 0;
+            try {
+                statement = connection.createStatement();
+                String query = "SELECT students.id FROM students " +
+                        " WHERE firstname = '" + name + "' AND secondname = '" + fam + "'";
+                ResultSet rs = statement.executeQuery(query);
+                while (rs.next()) {
+                    id_student = rs.getInt("id");
+                }
+                rs.close();
+                statement.close();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+
+            int idgss = 0;
+            try {
+                statement = connection.createStatement();
+                String query = "SELECT id FROM group_student_subject AS gss" +
+                        " WHERE gss.id_student = '" + id_student + "' AND" +
+                        "       gss.id_subject = '" + id_subj + "' AND" +
+                        "       gss.id_group = '" + id_group + "' ";
+                ResultSet rs = statement.executeQuery(query);
+                while (rs.next()) {
+                    idgss = rs.getInt("id");
+                }
+                rs.close();
+                statement.close();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+
+            int idavgmark = 0;
+            try {
+                statement = connection.createStatement();
+                String query = "SELECT avg(mark) FROM attendance" +
+                        " WHERE attendance.id_group_student_subject = '" + idgss + "' ";
+                ResultSet rs = statement.executeQuery(query);
+
+                while (rs.next()) {
+                    idavgmark = rs.getInt("avg(mark)");
+                }
+                System.out.println("Средний бал по предмету " + subjName + " = " + idavgmark);
+
+                rs.close();
+                statement.close();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+
+            int check=0;
+            ArrayList<Integer> poseshcaemost = new ArrayList<>();
+            try {
+                statement = connection.createStatement();
+                String query = "SELECT check_stud FROM attendance" +
+                        " WHERE attendance.id_group_student_subject = '" + idgss + "' ";
+                ResultSet rs = statement.executeQuery(query);
+
+                while (rs.next()) {
+                    check = rs.getInt("check_stud");
+                    poseshcaemost.add(check);
+                }
+                int count=0, posech=0;
+                for(int i=0; i<poseshcaemost.size(); i++){
+                    if(poseshcaemost.get(i)==1){
+                        count++;
+                    }
+                }
+                posech = count*100/poseshcaemost.size();
+                System.out.println("Средний процент посещаемости на "+subjName+" = "+posech+"%");
+
+                rs.close();
+                statement.close();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+
+            System.out.println("1.Просмотреть итоговую оценку/посещаемость (1) \n" +
+                    "2. Выход из просмотра итоговой оценки (Любая кнопка)");
+            n = scanner.nextInt();
+        }while (n==1);
 
     }
 
@@ -568,8 +676,8 @@ public class StudSubjectServiceImpl implements StudSubjectService {
             //connection.close();
         }catch (Exception e){
             System.out.println(e.getMessage());
+            throw new RuntimeException("Этот студент не зарегистрирован на данный предмет");
         }
-        throw new RuntimeException("Запрос addAttendance в функции getIdGSS");
     }
 
     // Функция получение ID из таблицы СТУДЕНТЫ
